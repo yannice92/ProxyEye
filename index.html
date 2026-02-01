@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Go-Grok Inspector</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; background: #1a1a1a; color: white; }
+        #sidebar { width: 30%; border-right: 1px solid #333; overflow-y: auto; }
+        #details { width: 70%; padding: 20px; overflow-y: auto; }
+        .log-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; }
+        .log-item:hover { background: #2a2a2a; }
+        .status-200 { color: #4caf50; }
+        .status-500 { color: #f44336; }
+        pre { background: #000; padding: 10px; border-radius: 5px; overflow-x: auto; color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div id="details"><h3>Select a request to see details</h3></div>
+
+    <script>
+        const ws = new WebSocket(`ws://${location.host}/ws`);
+        const sidebar = document.getElementById('sidebar');
+        const details = document.getElementById('details');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            item.innerHTML = `
+                <div style="font-size: 0.8em; color: #888">${data.time}</div>
+                <b>${data.method}</b> ${data.path}
+                <span class="status-${data.status}">${data.status}</span>
+                <div style="font-size: 0.8em; color: #888">${data.latency}</div>
+            `;
+            item.onclick = () => showDetails(data);
+            sidebar.prepend(item);
+        };
+
+        function showDetails(data) {
+            details.innerHTML = `
+                <h2>${data.method} ${data.path}</h2>
+                <p><b>Status:</b> ${data.status} | <b>Latency:</b> ${data.latency}</p>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <h4>Request Headers</h4>
+                        <pre>${data.req_headers}</pre>`;
+
+                        if (`${data.query_string}` != "") {
+                        details.innerHTML +=
+                        `<h4>Query Params</h4>
+                        <pre>${data.query_string}</pre>`;
+                        } 
+
+                        if (`${data.req_body}` != "") {
+                        details.innerHTML +=
+                        `<h4>Request Body</h4>
+                        <pre>${data.req_body}</pre>`;
+                        }
+                    details.innerHTML +=`
+                    </div>
+                    <div style="flex: 1;">`
+                        details.innerHTML +=`
+                        <h4>Response Headers</h4>
+                        <pre>${data.resp_headers}</pre>`
+                        
+                        details.innerHTML +=`
+                        <h4>Response Body</h4>
+                        <pre>${data.resp_body || "(empty)"}</pre>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
