@@ -1,6 +1,6 @@
 # ProxyEye 👁️
 
-**ProxyEye** is a lightweight, high-performance HTTP reverse proxy and request inspector built in Go. It bridges local traffic to the public internet via Cloudflare Tunnels while providing a powerful web dashboard to inspect every detail of your API traffic.
+**ProxyEye** is a lightweight, high-performance HTTP reverse proxy and request inspector built in Go. It bridges local traffic to the public internet via Cloudflare Tunnels (optional) while providing a powerful web dashboard to inspect every detail of your API traffic.
 
 ```
   _____                      ______             
@@ -59,7 +59,7 @@ Point ProxyEye to your local application port (e.g., if your app is running on p
 | --- | --- | --- |
 | `-p` | The target port of your local application. | `3000` |
 | `--domain` | Custom local domain mapping. | `localhost` |
-| `--ui-port` | Port for the Web Inspector UI. | `4040` |
+| `--ui` | Port for the Web Inspector UI. | `4040` |
 
 ---
 
@@ -69,8 +69,7 @@ Point ProxyEye to your local application port (e.g., if your app is running on p
 
 Navigate to `http://localhost:4040/inspect` to access:
 
-* **Request/Response Tabs:** Organized metadata for clear auditing.
-* **JSON Viewer:** Formatted and colored JSON payloads for better readability.
+* **Request/Response:** Organized metadata for clear auditing.
 * **Latency Tracking:** Precisely measured request-to-response duration in milliseconds.
 
 ### CLI View
@@ -88,16 +87,3 @@ The terminal provides a live-scrolling feed of incoming requests with immediate 
 ## 🛡️ License
 
 Distributed under the MIT License.
-
-```
-
----
-
-Since you are wrapping up your repository, would you like me to help you generate the **LICENSE** file (MIT) text to match?
-
-This [video guide on exporting Gemini chats](https://www.youtube.com/watch?v=JAfR9xrRgwA) shows how you can use Canvas mode to export your conversations directly into formatted documents or PDFs for your records.
-
-
-http://googleusercontent.com/youtube_content/21
-
-```
