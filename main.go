@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -64,6 +65,12 @@ type CombinedLog struct {
 	Time        string `json:"time"`
 }
 
+var (
+	history      []CombinedLog
+	historyMutex sync.Mutex
+	maxHistory   = 50
+)
+
 func main() {
 	printLogo()
 	uiPort := flag.String("ui", "4040", "port for the inspector UI")
@@ -110,6 +117,7 @@ func main() {
 		}
 		ctx := r.Request.Context()
 		reqBody, _ := ctx.Value("capturedReqBody").(string)
+
 		broadcast <- CombinedLog{
 			Method:      r.Request.Method,
 			Path:        r.Request.URL.Path,
@@ -164,6 +172,14 @@ func main() {
 		w.Write(data)
 	})
 
+	http.HandleFunc("/history", func(w http.ResponseWriter, r *http.Request) {
+		historyMutex.Lock()
+		defer historyMutex.Unlock()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(history)
+	})
+
 	go handleBroadcasts()                                     // For Web UI
 	go startCLIDashboard(targetPort, targetURL, customDomain) // For Terminal UI
 
@@ -178,6 +194,8 @@ func handleBroadcasts() {
 		msg := <-broadcast
 		// Send to CLI channel
 		cliChan <- msg
+		saveToHistory(msg)
+
 		// Send it to every connected client
 		clientsMu.Lock()
 		for client := range clients {
@@ -222,6 +240,19 @@ func startCLIDashboard(target, targetURL, customDomain string) {
 			msg.Status,
 			msg.Latency,
 		)
+	}
+}
+
+func saveToHistory(log CombinedLog) {
+	historyMutex.Lock()
+	defer historyMutex.Unlock()
+
+	// Append to slice
+	history = append(history, log)
+
+	// Keep only the latest logs (FIFO)
+	if len(history) > maxHistory {
+		history = history[1:]
 	}
 }
 
